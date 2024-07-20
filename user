@@ -1,0 +1,215 @@
+import java.util.*;
+
+class BusRoute {
+    private String start;
+    private String end;
+    private String schedule; // Example: "2023-04-15 10:00 AM"
+
+    public BusRoute(String start, String end, String schedule) {
+        this.start = start;
+        this.end = end;
+        this.schedule = schedule;
+    }
+
+    public String getStart() {
+        return start;
+    }
+
+    public String getEnd() {
+        return end;
+    }
+
+    public String getSchedule() {
+        return schedule;
+    }
+
+    @Override
+    public String toString() {
+        return start + " to " + end + " at " + schedule;
+    }
+}
+
+class Bus {
+    private BusRoute route;
+    private int capacity;
+    private boolean[] seats;
+
+    public Bus(BusRoute route, int capacity) {
+        this.route = route;
+        this.capacity = capacity;
+        this.seats = new boolean[capacity];
+    }
+
+    public BusRoute getRoute() {
+        return route;
+    }
+
+    public boolean isSeatAvailable(int seatNumber) {
+        if (seatNumber < 0 || seatNumber >= capacity) {
+            throw new IllegalArgumentException("Invalid seat number.");
+        }
+        return !seats[seatNumber];
+    }
+
+    public boolean bookSeat(int seatNumber) {
+        if (isSeatAvailable(seatNumber)) {
+            seats[seatNumber] = true;
+            return true;
+        }
+        return false;
+    }
+
+    public int getCapacity() {
+        return capacity;
+    }
+
+    public String getAvailableSeats() {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < capacity; i++) {
+            if (!seats[i]) {
+                sb.append(i).append(" ");
+            }
+        }
+        return sb.toString();
+    }
+}
+
+class User {
+    private String name;
+    private List<Ticket> bookingHistory;
+
+    public User(String name) {
+        this.name = name;
+        this.bookingHistory = new ArrayList<>();
+    }
+
+    public void bookTicket(Ticket ticket) {
+        bookingHistory.add(ticket);
+    }
+
+    public List<Ticket> getBookingHistory() {
+        return bookingHistory;
+    }
+
+    public String getName() {
+        return name;
+    }
+}
+
+class Admin {
+    private String name;
+
+    public Admin(String name) {
+        this.name = name;
+    }
+
+    public void addBus(List<Bus> buses, Bus bus) {
+        buses.add(bus);
+    }
+}
+
+class Ticket {
+    private User user;
+    private Bus bus;
+    private int seatNumber;
+
+    public Ticket(User user, Bus bus, int seatNumber) {
+        this.user = user;
+        this.bus = bus;
+        this.seatNumber = seatNumber;
+    }
+
+    @Override
+    public String toString() {
+        return "Ticket for " + user.getName() + " on " + bus.getRoute() + " at seat " + seatNumber;
+    }
+}
+
+public class BookingSystem {
+    private static List<Bus> buses = new ArrayList<>();
+    private static List<User> users = new ArrayList<>();
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Sample Data
+        Admin admin = new Admin("Admin1");
+        User user = new User("John");
+
+        BusRoute route1 = new BusRoute("CityA", "CityB", "2024-04-15 10:00 AM");
+        Bus bus1 = new Bus(route1, 10);
+        admin.addBus(buses, bus1);
+
+        System.out.println("Welcome to the Bus Booking System");
+
+        while (true) {
+            System.out.println("1. List Available Buses");
+            System.out.println("2. Book a Ticket");
+            System.out.println("3. View Booking History");
+            System.out.println("4. Exit");
+            System.out.print("Select an option: ");
+            int choice = scanner.nextInt();
+
+            switch (choice) {
+                case 1:
+                    listAvailableBuses();
+                    break;
+                case 2:
+                    bookTicket(scanner, user);
+                    break;
+                case 3:
+                    viewBookingHistory(user);
+                    break;
+                case 4:
+                    System.out.println("Thank you for using the system!");
+                    scanner.close();
+                    return;
+                default:
+                    System.out.println("Invalid option. Try again.");
+            }
+        }
+    }
+
+    private static void listAvailableBuses() {
+        System.out.println("Available Buses:");
+        for (Bus bus : buses) {
+            System.out.println("Bus on route: " + bus.getRoute() + " | Available seats: " + bus.getAvailableSeats());
+        }
+    }
+
+    private static void bookTicket(Scanner scanner, User user) {
+        System.out.println("Select a bus to book:");
+        for (int i = 0; i < buses.size(); i++) {
+            System.out.println((i + 1) + ". " + buses.get(i).getRoute());
+        }
+
+        System.out.print("Select a bus: ");
+        int busChoice = scanner.nextInt();
+        if (busChoice < 1 || busChoice > buses.size()) {
+            System.out.println("Invalid selection.");
+            return;
+        }
+
+        Bus selectedBus = buses.get(busChoice - 1);
+
+        System.out.print("Select a seat number (0-" + (selectedBus.getCapacity() - 1) + "): ");
+        int seatNumber = scanner.nextInt();
+
+        if (selectedBus.isSeatAvailable(seatNumber)) {
+            selectedBus.bookSeat(seatNumber);
+            Ticket ticket = new Ticket(user, selectedBus, seatNumber);
+            user.bookTicket(ticket);
+
+            System.out.println("Booking successful! " + ticket);
+        } else {
+            System.out.println("Seat not available. Please choose a different seat.");
+        }
+    }
+
+    private static void viewBookingHistory(User user) {
+        System.out.println("Booking History for " + user.getName() + ":");
+        for (Ticket ticket : user.getBookingHistory()) {
+            System.out.println(ticket);
+        }
+    }
+}
